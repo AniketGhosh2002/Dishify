@@ -1,0 +1,188 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{% static 'styles/styles.css' %}">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playwrite+AU+SA:wght@100..400&display=swap">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <title>dishify</title>
+</head>
+<body>
+
+    <nav class="navbar fixed-top bg-dark border-bottom border-body" data-bs-theme="dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="" style="color: white; font-size: 2rem; font-family: 'Playwrite AU SA', serif; display: flex; align-items: center;">
+                <img src="{% static 'images/logo.jpg' %}" alt="Logo" width="75" height="60" class="d-inline-block align-text-top me-2" style="background-color: transparent; border-radius: 50%;">
+                Dishify
+            </a>
+        </div>
+    </nav>
+
+
+    <div class="container mt-5">
+        <h2 class="text-center mb-4" id="recipe-header">Recipe Magic Starts Here</h2>
+        <form id="recipe-form" class="p-4 shadow rounded bg-light">
+            <div class="mt-4">
+                <label for="ingredient" class="form-label large-label">Ingredient :</label>
+            </div>
+            <div id="ingredients-container">
+                <div class="row g-2 ingredient-row align-items-center">
+                    <div class="col-md-5 d-flex">
+                        <input type="text" name="ingredient" class="form-control" placeholder="e.g., Flour, Rice" required>
+                    </div>
+                    <div class="col-md-6 d-flex">
+                        <input type="text" name="quantity" class="form-control me-2" placeholder="e.g., 2 cups, 100 gram" required>
+                        <button type="button" class="btn btn-dark remove-row">
+                            <i class="fa-regular fa-trash-can"></i> Remove
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <button type="button" id="add-ingredient" class="btn btn-dark mt-2">
+                <i class="fa-solid fa-plus"></i> Add
+            </button>
+            <div class="mt-4">
+                <label for="cuisine" class="form-label large-label">Cuisine :</label>
+            </div>
+            <div class="col-md-5">
+                <input type="text" id="cuisine" name="cuisine" class="form-control" placeholder="e.g., Italian, Chinese">
+            </div>
+            <div class="button-container">
+                <button type="submit" class="btn btn-dark mt-4">
+                    <i class="fa-regular fa-circle-down"></i> Generate Recipe
+                </button>
+            </div>            
+        </form>
+    </div>
+    
+
+    <div class="container mt-5 pb-5" id="recipe-output">
+        <div class="text-center text-muted">
+            
+        </div>
+    </div>
+
+    <nav class="navbar fixed-bottom bg-dark text-white">
+        <div class="container-fluid d-flex justify-content-center align-items-center">
+            <p class="mb-0">< Google GenAI Recipe Generator ></p>
+        </div>
+    </nav>
+
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script>
+        document.addEventListener('DOMContentLoaded', function () {
+            document.getElementById('add-ingredient').addEventListener('click', function () {
+                const container = document.getElementById('ingredients-container');
+                const row = document.createElement('div');
+                row.className = 'row g-2 ingredient-row align-items-center';
+                row.innerHTML = `
+                    <div class="col-md-5 d-flex">
+                        <input type="text" name="ingredient" class="form-control" placeholder="e.g., Flour, Rice" required>
+                    </div>
+                    <div class="col-md-6 d-flex">
+                        <input type="text" name="quantity" class="form-control me-2" placeholder="e.g., 2 cups, 100 gram" required>
+                        <button type="button" class="btn btn-dark remove-row">
+                            <i class="fa-regular fa-trash-can"></i> Remove
+                        </button>
+                    </div>
+                `;
+                container.appendChild(row);
+            });
+        
+
+            document.getElementById('ingredients-container').addEventListener('click', function (event) {
+                if (event.target.closest('.remove-row')) {
+                    const row = event.target.closest('.ingredient-row');
+                    if (row) {
+                        row.remove();
+                    }
+                }
+            });
+        
+
+            document.getElementById('recipe-form').addEventListener('submit', function (e) {
+                e.preventDefault();
+        
+                const rows = document.querySelectorAll('.ingredient-row');
+                const ingredients = [];
+                rows.forEach(row => {
+                    const ingredient = row.querySelector('input[name="ingredient"]').value.trim();
+                    const quantity = row.querySelector('input[name="quantity"]').value.trim();
+                    if (ingredient && quantity) {
+                        ingredients.push({ ingredient, quantity });
+                    }
+                });
+        
+                const cuisine = document.getElementById('cuisine').value.trim();
+        
+                fetch("{% url 'generate_recipe' %}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}',
+                    },
+                    body: JSON.stringify({ ingredients, cuisine }),
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.error) {
+                        alert(data.error);
+                    } else {
+                        const output = document.getElementById('recipe-output');
+                        output.innerHTML = `
+                            <div class="card shadow">
+                                <div id="recipe-section" class="card-body">
+                                    <h2 class="card-title text-center">${data.title}</h2>
+                                    <h4 class="mt-4">Ingredients :</h4>
+                                    <ol>
+                                        ${data.ingredients.map(ingredient => `<li class="list-group-item">${ingredient}</li>`).join('')}
+                                    </ol>
+                                    <h4 class="mt-4">Instructions :</h4>
+                                    <ol>
+                                        ${data.steps.map(step => `<li class="list-group-item">${step}</li>`).join('')}
+                                    </ol>
+                                </div>
+                                <div class="button-container">
+                                    <button id="reset-button" class="btn btn-dark mb-3 me-2" onclick="window.location.href='';">
+                                        <i class="fas fa-undo"></i> Reset
+                                    </button>
+                                    <button id="download-recipe" class="btn btn-dark mb-3">
+                                        <i class="fa-solid fa-print"></i> Print
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+
+                        const downloadRecipeButton = document.getElementById('download-recipe');
+                        const recipeSection = document.getElementById('recipe-section');
+
+                        downloadRecipeButton.addEventListener('click', function () {
+                        html2canvas(recipeSection).then(canvas => {
+                            const link = document.createElement('a');
+                            link.href = canvas.toDataURL('image/png');
+                            link.download = `recipe.png`;
+                            link.click();
+                            }).catch(error => {
+                                console.error('Error generating canvas:', error);
+                            });
+                        });            
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Failed to generate the recipe. Please try again.');
+                });
+            });
+        });
+</script>
+</body>
