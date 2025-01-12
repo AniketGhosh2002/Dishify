@@ -12,6 +12,16 @@
         body {
             padding-top: 80px;
         }
+        .navbar-brand {
+            color: white;
+            font-size: 2rem;
+            font-family: 'Playwrite AU SA', serif;
+            display: flex; 
+            align-items: center;
+        }
+        #recipe-header {
+        font-family: 'Playwrite AU SA', sans-serif;
+        }
         .large-label {
             font-size: 1.25rem;
             font-weight: bold;
@@ -24,13 +34,17 @@
         .ingredient-row input {
             flex: 1;
         }
+        .button-container {
+            display: flex;
+            justify-content: center;
+        }
     </style>
 </head>
 <body>
 
     <nav class="navbar fixed-top bg-dark border-bottom border-body" data-bs-theme="dark">
         <div class="container-fluid">
-            <a class="navbar-brand" href="" style="color: white; font-size: 2rem; font-family: 'Playwrite AU SA', serif; display: flex; align-items: center;">
+            <a class="navbar-brand" href="">
                 <span class="material-symbols-outlined" style="font-size: 3.5rem; line-height: 1; margin-right: 10px;">ramen_dining</span>
                     dishify
             </a>
@@ -39,7 +53,7 @@
 
 
     <div class="container mt-5">
-        <h2 class="text-center mb-4" id="recipe-header" style="font-family: 'Playwrite AU SA', sans-serif;">Recipe Magic Starts Here</h2>
+        <h2 class="text-center mb-4" id="recipe-header" >Recipe Magic Starts Here</h2>
         <form id="recipe-form" class="p-4 shadow rounded bg-light">
             <div class="mt-4">
                 <label for="ingredient" class="form-label large-label">Ingredient :</label>
@@ -66,7 +80,7 @@
             <div class="col-md-5">
                 <input type="text" id="cuisine" name="cuisine" class="form-control" placeholder="e.g., Italian, Chinese">
             </div>
-            <div class="button-container" style="display: flex; justify-content: center;">
+            <div class="button-container">
                 <button type="submit" class="btn btn-dark mt-4">
                     <i class="fa-regular fa-circle-down"></i> Generate Recipe
                 </button>
